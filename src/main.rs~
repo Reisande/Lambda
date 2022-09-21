@@ -1,0 +1,77 @@
+#[derive(Debug)]
+enum Top {
+    Variable(String),
+    Lambda(String, Box<Top>),
+    Application(Box<Top>, Box<Top>),
+}
+
+// TODO: convert this to use a string builder so this fn isn't O(n^2)
+fn pretty_print(t: Top) -> String {
+    match t {
+        Top::Variable(v) => return v,
+        Top::Lambda(parameter, body) => {
+            return String::from("λ(")
+                + &parameter
+                + &String::from(".")
+                + &pretty_print(*body)
+                + &String::from(")");
+        }
+        Top::Application(caller, argument) => {
+            return String::from("(")
+                + &pretty_print(*caller)
+                + &String::from(" ")
+                + &pretty_print(*argument)
+                + &String::from(")");
+        }
+    }
+}
+
+// goes through the entirely of the tree representation and replaces an argument
+// with a value
+fn replace_parameter(t: Top, argument: Top, name: String): Top {
+    match t {
+        Top::Variable(v) => {
+            if(v == name) {
+                return argument;
+            }
+        },
+        Top::Lambda(parameter, body) => {
+            // assumes variable shadowing
+            if(parameter == name) {
+                return t;
+            } else {
+                return Top::Lambda(parameter, replace_parameter(body, argument, name));
+            }
+        },
+        Top::Application(caller, inner_argument) {
+            return Top::Application(replace_parameter(caller, argument, name),
+            replace_parameter(inner_argument, argument, name));
+        }
+    }
+}
+    
+// performs one level of evaluation
+// currently assumes correct format in the form of (lambda(paramater, ...), arg)
+fn call_by_name(t: Top) -> Top {
+    match(t) {
+        Top::Application(caller, argument) => {t},
+        _ => {println!("Function fully evaluated: ");
+              t}
+    }
+}
+
+fn call_by_value(t: Top) -> Top {
+    t
+}
+
+fn main() {
+    let top = Top::Application(
+        Box::new(Top::Lambda(
+            String::from("y"),
+            Box::new(Top::Variable(String::from("y"))),
+        )),
+        Box::new(Top::Variable(String::from("x"))),
+    );
+
+    println!("Evaluation: {:?}", pretty_print(top));
+}
