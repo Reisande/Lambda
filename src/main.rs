@@ -93,7 +93,14 @@ fn call_by_value(t: &Rc<Top>) -> Rc<Top> {
 // assumes that only applications or lambdas can be passed an argument
 fn call_by_name(t: &Rc<Top>) -> Rc<Top> {
     match (*t).borrow() {
-        Top::Application(caller, argument) => {}
+        Top::Application(caller, argument) => {
+            match (*caller).borrow() {
+                Top::Lambda(parameter, body) => {
+                    return replace_parameter(body, argument, *parameter);
+                },
+                _ => {}
+            }
+        }
         _ => {}
     }
 
